@@ -46,6 +46,17 @@ pub async fn create_short_url(
     State(state): State<Arc<AppState<'_>>>,
     Json(url_body): Json<CreateShortUrl>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
+    let filter = doc! {"longURL":&url_body.url};
+    let future = state.collection.find_one(filter, None).await;
+    if future.is_err() {
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Some error occured".to_owned(),
+        ));
+    };
+    if let Some(result) = future.unwrap() {
+        return Ok(Json(json!({"shortUrl":result.short_url})));
+    }
     let short_id = nanoid::nanoid!(9);
     let short_url = format!("{}/{}",state.server, short_id);
     let doc = ShortUrl {
