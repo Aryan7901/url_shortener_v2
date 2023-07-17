@@ -46,6 +46,7 @@ pub async fn create_short_url(
     State(state): State<Arc<AppState<'_>>>,
     Json(url_body): Json<CreateShortUrl>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
+    println!("url {}",url_body.url);
     let short_id = nanoid::nanoid!(9);
     let short_url = format!("{}/{}",state.server, short_id);
     let doc = ShortUrl {
