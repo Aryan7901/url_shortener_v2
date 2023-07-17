@@ -15,15 +15,12 @@ async fn main() {
     let client_options = ClientOptions::parse(db_str).await.unwrap();
     let client = Client::with_options(client_options).unwrap();
     let db = client.database("shortener");
-    println!("db {}, port {} server {}",db_str,port,server);
     println!("Connected to mongodb");
     let collection = db.collection("urls");
+    let origins=vec!["http://localhost:3000".parse().unwrap(),"https://aryan7901.github.io".parse().unwrap()];
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Origin::exact("http://localhost:3000".parse().unwrap()))
-        .allow_origin(Origin::exact(
-            "https://aryan7901.github.io".parse().unwrap(),
-        ));
+        .allow_origin(Origin::list(origins));
     let app_state = Arc::new(AppState { collection,server });
     let app = Router::new()
         .route("/:short_url_id", get(get_url))
