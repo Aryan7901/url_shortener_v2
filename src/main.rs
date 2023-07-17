@@ -1,5 +1,5 @@
 use axum::{
-    http::Method,
+    http::{Method, header::CONTENT_TYPE},
     routing::{get, post},
      Router,
 };
@@ -20,7 +20,7 @@ async fn main() {
     let origins=vec!["http://localhost:3000".parse().unwrap(),"https://aryan7901.github.io".parse().unwrap()];
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Origin::list(origins));
+        .allow_origin(Origin::list(origins)).allow_headers([CONTENT_TYPE]);
     let app_state = Arc::new(AppState { collection,server });
     let app = Router::new()
         .route("/:short_url_id", get(get_url))
