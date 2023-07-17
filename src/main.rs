@@ -27,7 +27,7 @@ async fn main() {
         .route("/url", post(create_short_url))
         .with_state(app_state.clone())
         .layer(cors);
-    let addr = SocketAddr::from(([127, 0, 0, 1], port.parse::<u16>().unwrap_or(8000)));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port.parse::<u16>().unwrap_or(8000)));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
