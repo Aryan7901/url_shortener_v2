@@ -1,10 +1,15 @@
 use std::sync::Arc;
 
-use axum::{extract::{State, Path}, response::Redirect, http::StatusCode, Json};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::Redirect,
+    Json,
+};
 use mongodb::bson::doc;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
-
+use serde_json::{json, Value};
+use url::Url;
 pub struct AppState<'a> {
     pub collection: mongodb::Collection<ShortUrl>,
     pub server: &'a str,
@@ -46,6 +51,9 @@ pub async fn create_short_url(
     State(state): State<Arc<AppState<'_>>>,
     Json(url_body): Json<CreateShortUrl>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
+    if let Err(_) = Url::parse(&url_body.url) {
+        return Err((StatusCode::BAD_REQUEST, "Invalid URL".to_owned()));
+    }
     let filter = doc! {"longURL":&url_body.url};
     let future = state.collection.find_one(filter, None).await;
     if future.is_err() {
@@ -58,13 +66,13 @@ pub async fn create_short_url(
         return Ok(Json(json!({"shortUrl":result.short_url})));
     }
     let short_id = nanoid::nanoid!(9);
-    let short_url = format!("{}/{}",state.server, short_id);
+    let short_url = format!("{}/{}", state.server, short_id);
     let doc = ShortUrl {
-        short_url:short_url.clone(),
+        short_url: short_url.clone(),
         long_url: url_body.url,
         short_url_id: short_id,
     };
-    match state.collection.insert_one( doc, None).await {
+    match state.collection.insert_one(doc, None).await {
         Ok(_) => Ok(Json(json!({"shortUrl":short_url}))),
         Err(_) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
