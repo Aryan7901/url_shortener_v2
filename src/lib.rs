@@ -10,9 +10,9 @@ use mongodb::bson::doc;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use url::Url;
-pub struct AppState<'a> {
+pub struct AppState {
     pub collection: mongodb::Collection<ShortUrl>,
-    pub server: &'a str,
+    pub server: String
 }
 #[derive(Deserialize)]
 pub struct CreateShortUrl {
@@ -30,7 +30,7 @@ pub struct ShortUrl {
 }
 
 pub async fn get_url(
-    State(state): State<Arc<AppState<'_>>>,
+    State(state): State<Arc<AppState>>,
     Path(short_url_id): Path<String>,
 ) -> Result<Redirect, (StatusCode, String)> {
     let filter = doc! {"shortUrlId":short_url_id};
@@ -48,7 +48,7 @@ pub async fn get_url(
 }
 
 pub async fn create_short_url(
-    State(state): State<Arc<AppState<'_>>>,
+    State(state): State<Arc<AppState>>,
     Json(url_body): Json<CreateShortUrl>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
     if let Err(_) = Url::parse(&url_body.url) {
